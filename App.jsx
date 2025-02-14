@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import "./index.css";
+import "/index.css";
+import axios from "axios";
 
 const SVG_WIDTH = 400;
 const SVG_HEIGHT = 400;
@@ -28,8 +29,21 @@ const App = () => {
     const [position, setPosition] = useState({ x: 100, y: 100 });
     const [speed, setSpeed] = useState(INITIAL_SPEED);
     const [moves, setMoves] = useState(0);
+    const [leaderboard, setLeaderboard] = useState([]);
     const lastClickTime = useRef(0);
     const allowClick = useRef(true);
+
+    useEffect(() => {
+        const loadLeaderboard = async () => {
+            try {
+                await fetchLeaderboard();
+            } catch (error) {
+                console.error("Error loading leaderboard:", error);
+            }
+        };
+
+        loadLeaderboard().catch(console.error);  // ✅ Fix: Explicitly handling the promise
+    }, []);
 
     const moveCircle = () => {
         if (!allowClick.current) return;
@@ -56,21 +70,46 @@ const App = () => {
         return () => clearInterval(interval);
     }, [speed]);
 
-    const handleClick = (e) => {
+    const handleClick = async (e) => {
         e.stopPropagation();
         const now = Date.now();
         if (now - lastClickTime.current > 100 && allowClick.current) {
+            const newScore = score + 1;
+            console.log("Click registered! New score:", newScore);
             setScore((prevScore) => prevScore + 1);
             lastClickTime.current = now;
             allowClick.current = false;
+            await submitScore(newScore);
             setTimeout(() => {
                 allowClick.current = true;
             }, 150);
         }
     };
 
+    const fetchLeaderboard = async () => {
+        try {
+            const response = await axios.get("http://localhost:3000/api/leaderboard");
+            console.log("Fetched Leaderboard:", response.data);  // ✅ Debugging step
+            setLeaderboard(Array.isArray(response.data) ? response.data : []);
+        } catch (error) {
+            console.error("Error fetching leaderboard:", error);
+            setLeaderboard([]); // Prevents UI crashes
+        }
+    };
+
+    const submitScore = async (newScore) => {
+        try {
+            console.log("Submitting score:", newScore); // ✅ Debugging
+            await axios.post("http://localhost:3000/api/submit-score", { score: newScore });
+            console.log("Score submitted successfully!"); // ✅ Debugging
+            await fetchLeaderboard(); // ✅ Refresh leaderboard
+        } catch (error) {
+            console.error("Error submitting score:", error);
+        }
+    };
+
     return (
-        <div style={{ textAlign: "center", marginTop: "20px" }}>
+        <div style={{textAlign: "center", marginTop: "20px"}}>
             <h2>Catch the Moving Circle! 🎯</h2>
             <p>Score: <strong>{score}</strong></p>
             <p>Speed: {speed}ms</p>
@@ -131,12 +170,22 @@ const App = () => {
                             fill="#FFD700"
                             stroke="black"
                             strokeWidth="1"
-                            animate={{ opacity: [0, 1, 0], scale: [0.7, 1, 0.7] }}
-                            transition={{ duration: 2, repeat: Infinity, delay: star.delay }}
+                            animate={{opacity: [0, 1, 0], scale: [0.7, 1, 0.7]}}
+                            transition={{duration: 2, repeat: Infinity, delay: star.delay}}
                         />
                     </motion.g>
                 ))}
             </svg>
+            <h3>🏆 Top 5 Leaderboard</h3>
+            <ul>
+                {leaderboard.length > 0 ? (
+                    leaderboard?.map((entry, index) => (
+                        <li key={index}>Score: {entry.score}</li>
+                    ))
+                ) : (
+                    <p>No scores yet.</p>
+                )}
+            </ul>
         </div>
     );
 };
