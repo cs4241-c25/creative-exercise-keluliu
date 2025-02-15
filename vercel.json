@@ -2,9 +2,8 @@
   "version": 2,
   "builds": [
     {
-      "src": "vite.config.js",
-      "use": "@vercel/static-build",
-      "config": { "distDir": "dist" }
+      "src": "package.json",
+      "use": "@vercel/static-build"
     },
     {
       "src": "server.js",
@@ -14,5 +13,10 @@
   "routes": [
     { "src": "/api/.*", "dest": "server.js" },
     { "src": "/(.*)", "dest": "/index.html" }
-  ]
+  ],
+  "functions": {
+    "server.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
 }
