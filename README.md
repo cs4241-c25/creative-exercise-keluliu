@@ -3,7 +3,7 @@ Inclass Exercise - Creative Coding: Interactive Multimedia
 
 ## Catch the Moving Circle!🎯
 
-[GlitchLink](https://creative-exercise-keluliu.glitch.me)
+[VercelLink](https://creative-exercise-keluliu.vercel.app)
 
 ### Project Overview
 This is an interactive SVG-based game where players try to click on a moving circle to increase their score. The circle moves automatically at increasing speeds, and stars twinkle in the background for a visually appealing effect.
